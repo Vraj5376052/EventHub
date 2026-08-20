@@ -13,6 +13,7 @@ const registerUser = async (req, res) => {
         if (!name || name.trim().length < 2) {
             return res.status(400).json({ field: 'name', message: 'Name must be at least 2 characters' });
         }
+        const cleanEmail = email.trim().toLowerCase();
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '')) {
             return res.status(400).json({ field: 'email', message: 'Enter a valid email address' });
         }
@@ -22,7 +23,6 @@ const registerUser = async (req, res) => {
         if (!['customer', 'organiser'].includes(role)) {
             return res.status(400).json({ field: 'role', message: 'Please choose a role' });
         }
-        const cleanEmail = email.trim().toLowerCase();
 
         const userExists = await User.findOne({ email: cleanEmail });
         if (userExists) {
