@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
+
 dotenv.config();
 
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/events', require('./routes/eventRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
 
 // Export the app object for testing
 if (require.main === module) {
