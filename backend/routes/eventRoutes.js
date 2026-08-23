@@ -1,8 +1,9 @@
 const express = require('express');
-const { createEvent, getMyEvents } = require('../controllers/eventController');
+const { createEvent, getMyEvents, getPublishedEvents } = require('../controllers/eventController');
 const { protect, requireRole } = require('../middleware/authMiddleware');
 const router = express.Router();
 
+router.get('/', protect, getPublishedEvents);
 router.post('/', protect, requireRole('organiser'), createEvent);
 router.get('/mine', protect, requireRole('organiser'), getMyEvents);
 
