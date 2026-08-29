@@ -4,7 +4,7 @@ An event ticket booking system built for IFN636 Assessment 1.
 
 Small event organisers (uni clubs, local venues) usually sell tickets with a Facebook post and a spreadsheet, which means nobody has an authoritative count of remaining seats and events get oversold. EventHub makes the system hold the seat count and enforces the limit at the moment of booking, so overselling can't happen rather than just being discouraged.
 
-**Live:** http://13.238.116.90
+**Live:** http://13.238.141.88
 
 ---
 
@@ -30,7 +30,7 @@ The interface hides the options you can't use, but that's just tidiness. The rea
 - Node 22 and Express backend
 - MongoDB Atlas
 - JWT for auth, bcrypt for passwords
-- nginx as a reverse proxy, PM2 to keep the processes running
+- Runs on EC2 with `npm start`, the frontend on port 3000 and the API on port 5001
 
 ---
 
@@ -128,46 +128,51 @@ Seats remaining is always worked out as `capacity - bookedSeats`. It's never sto
 There's no CI/CD, it's deliberately out of scope for this assessment. This is the manual procedure.
 
 1. Start the EC2 instance and note the public IPv4 address
-2. In the security group, allow SSH (22) from your own IP only, and HTTP (80) and Custom TCP (5001) from anywhere
-3. On the instance, install nginx, Node 22 via nvm, and PM2
+2. In the security group, add inbound rules for SSH (22), Custom TCP (3000) and Custom TCP (5001), each set to your own IP. The unit's AWS account deletes any rule with a source of `0.0.0.0/0` automatically, so every rule has to name a specific address
+3. On the instance, run `sudo apt update && sudo apt upgrade`, then install git, Node.js and npm
 4. Clone the repo
 5. Create `backend/.env` directly on the server. It's gitignored and never committed.
 6. Add the instance's IP to the MongoDB Atlas network allowlist
-7. **Build the frontend on your own machine**, not on the server:
-   ```bash
-   cd frontend
-   REACT_APP_API_URL=http://YOUR-IP:5001 npm run build
-   scp -i your-key.pem -r build ubuntu@YOUR-IP:~/EventHub/frontend/
+7. Create `frontend/.env` on the server so the browser knows where the API is:
    ```
-8. On the server, start both processes and make them survive a reboot:
-   ```bash
-   cd ~/EventHub/backend && pm2 start server.js --name backend
-   cd ~/EventHub/frontend && pm2 serve build 3000 --name frontend --spa
-   pm2 save && pm2 startup
+   REACT_APP_API_URL=http://YOUR-IP:5001
    ```
-9. Point nginx at port 3000 and restart it
+   Without this the browser falls back to `localhost:5001`, which means the visitor's own machine, so the page loads and nothing works.
+8. Install dependencies and start both processes together:
+   ```bash
+   cd ~/EventHub
+   npm run install-all
+   npm start
+   ```
+9. Open `http://YOUR-IP:3000` in a browser
 10. Test both workflows from a network other than the one you developed on
 
-**Step 7 matters.** Running `npm run build` on the instance uses 2 to 3 GB and froze the server during deployment. Building locally and copying the folder up avoids it entirely.
+**Step 7 matters.** It is the single most common reason a deployed copy of this app loads but does nothing.
+
+**`npm start` runs in the foreground.** Closing the terminal stops the application, so it has to be started again after any restart of the instance.
 
 ### Ports
 
 | Port | Open to | Why |
 |---|---|---|
-| 22 | Specific IPs | Admin access, shouldn't be public |
-| 80 | Anyone | The site has to be reachable |
-| 5001 | Anyone | The browser calls the API directly, so this can't be closed |
+| 22 | Specific IPs | Admin access over SSH |
+| 3000 | Specific IPs | Serves the page |
+| 5001 | Specific IPs | The browser calls the API directly, so this cannot be closed |
+
+Nothing is open to `0.0.0.0/0`, and nothing can be: the unit's AWS account runs a policy that deletes such rules within seconds of them being created. Access is granted per address instead, and the EC2 instance ID is supplied so the teaching team can reach the instance through the account.
+
+
 
 ### If the IP changes
 
-No Elastic IP was available on the shared student account, so the instance has to stay running. If the address does change:
+No Elastic IP was available on the shared student account, and the instance is stopped automatically outside teaching hours, so the address does change. Recovery is:
 
-1. Rebuild the frontend with the new `REACT_APP_API_URL`
-2. `scp` the build folder up
-3. `pm2 restart frontend`
-4. Update the Atlas allowlist and the URL in this file
+1. Start the instance and note the new public IPv4 address
+2. Re-select **My IP** on all three inbound rules
+3. Update `REACT_APP_API_URL` in `frontend/.env` to the new address
+4. `npm start` again
 
-Takes about five minutes.
+About five minutes. The MongoDB Atlas allowlist accepts any address, so it does not need updating.
 
 ---
 
@@ -189,9 +194,10 @@ These are designed and sitting in the backlog, not forgotten. The brief asks for
 
 Other known limitations:
 
-- The JWT lasts 30 days, which came from the starter project. 24 hours would be more sensible for something holding personal data.
 - The "My Bookings" link shows in the customer navigation but the page isn't built.
-- The API is served on port 5001 rather than proxied through nginx. Proxying `/api` would mean only port 80 needs to be open.
+- Access is restricted to named source addresses, so the site is not reachable from an arbitrary network. This is a constraint of the unit's AWS account, not a choice.
+- The instance has no Elastic IP, so the public address changes whenever it restarts, and `frontend/.env` has to be updated when it does.
+- `npm start` runs in the foreground, so the application stops when the session that launched it ends.
 
 ---
 
@@ -199,8 +205,7 @@ Other known limitations:
 
 | | |
 |---|---|
-| Live app | http://13.238.116.90 |
-| API | http://13.238.116.90:5001 |
+| Live app | http://13.238.141.88 |
 | EC2 instance | `i-0c5b45be3f12330e3`, ap-southeast-2 |
 | Repo | https://github.com/Vraj5376052/EventHub |
 

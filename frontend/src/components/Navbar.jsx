@@ -12,7 +12,7 @@ const Navbar = () => {
 
   return (
     <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
-      <Link to="/" className="text-2xl font-bold">EventHub</Link>
+            <Link to={user ? (user.role === 'organiser' ? '/my-events' : '/events') : '/login'} className="text-2xl font-bold">EventHub</Link>
       <div className="flex items-center">
         {user ? (
           <>
@@ -25,7 +25,6 @@ const Navbar = () => {
             {user.role === 'customer' && (
               <>
                 <Link to="/events" className="mr-4">Browse Events</Link>
-                <Link to="/my-bookings" className="mr-4">My Bookings</Link>
               </>
             )}
             <Link to="/profile" className="mr-4">Profile</Link>
