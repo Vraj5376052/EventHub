@@ -26,7 +26,7 @@ The interface hides the options you can't use, but that's just tidiness. The rea
 
 ## Stack
 
-- React 18 frontend, served as a static build
+- React 18 frontend
 - Node 22 and Express backend
 - MongoDB Atlas
 - JWT for auth, bcrypt for passwords
