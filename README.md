@@ -4,7 +4,7 @@ An event ticket booking system built for IFN636 Assessment 1.
 
 Small event organisers (uni clubs, local venues) usually sell tickets with a Facebook post and a spreadsheet, which means nobody has an authoritative count of remaining seats and events get oversold. EventHub makes the system hold the seat count and enforces the limit at the moment of booking, so overselling can't happen rather than just being discouraged.
 
-**Live:** http://13.238.141.88
+**Live:** http://13.238.141.88:3000
 
 ---
 
@@ -205,7 +205,7 @@ Other known limitations:
 
 | | |
 |---|---|
-| Live app | http://13.238.141.88 |
+| Live app | http://13.238.141.88:3000 |
 | EC2 instance | `i-0c5b45be3f12330e3`, ap-southeast-2 |
 | Repo | https://github.com/Vraj5376052/EventHub |
 
